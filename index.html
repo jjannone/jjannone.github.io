@@ -87,9 +87,12 @@
       Cloudflare Worker relay with audience and remote-performer modes.
     </p>
     <p class="links">
-      <a class="secondary" href="/multi-user-template/#local">Local mode</a>
+      <!-- Local mode goes to a redirect endpoint on the relay; the Max
+           patch publishes its current LAN URL there on Cloud connect.
+           If no host is connected, the worker returns a 404 with a
+           helpful message instead of a redirect. -->
+      <a class="secondary" href="https://mu-relay.jannone-544.workers.dev/lan/multi-user-template/main">Local mode</a>
       <a class="primary"   href="/multi-user-template/?cloud=wss%3A%2F%2Fmu-relay.jannone-544.workers.dev&amp;piece=multi-user-template&amp;room=main">Open (web)</a>
-      <a class="secondary" href="https://github.com/jjannone/multi-user-template">Source</a>
     </p>
   </section>
 
