@@ -5,156 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>John Jannone</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.5; background: #fff; color: #000; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 44rem;
+      margin: 4rem auto;
+      padding: 0 1rem;
+      line-height: 1.5;
+      background: #fff;
+      color: #000;
+    }
     a { color: #0366d6; }
-    h2 { margin-top: 2.5rem; border-bottom: 1px solid #eee; padding-bottom: .25rem; }
-    ul.entries { list-style: none; padding: 0; }
-    ul.entries li { padding: .5rem 0; border-bottom: 1px solid #f3f3f3; font-size: .95rem; }
-    ul.entries time { color: #888; font-size: .8rem; }
-    form { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem; }
-    input, textarea, button { font: inherit; padding: .4rem .6rem; border: 1px solid #ccc; border-radius: 4px; }
-    button { background: #0366d6; color: #fff; border: 0; cursor: pointer; }
-    button:disabled { opacity: .5; cursor: wait; }
-    .status { font-size: .85rem; color: #888; min-height: 1.2em; }
+    h1 { margin-bottom: .25rem; }
+    h2 {
+      margin-top: 2.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: .25rem;
+    }
+
+    /* Project cards. Each project gets its own card with a prominent
+       header so multiple projects on this page can be told apart at a
+       glance. When adding a new project, copy the .project block — the
+       <h3> is what distinguishes it. */
+    .project {
+      margin: 1.25rem 0;
+      padding: 1rem 1.25rem;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      background: #fafbfc;
+    }
+    .project h3 {
+      margin: 0 0 .5rem;
+      font-size: 1.15rem;
+      letter-spacing: 0.01em;
+    }
+    .project p {
+      margin: 0 0 .5rem;
+      color: #444;
+    }
+    .project .links {
+      margin: 0;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .project .links a {
+      display: inline-block;
+      padding: .35rem .75rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: .9rem;
+    }
+    .project .links a.primary {
+      background: #0366d6;
+      color: #fff;
+    }
+    .project .links a.secondary {
+      background: #fff;
+      color: #0366d6;
+      border: 1px solid #d1d5da;
+    }
   </style>
 </head>
 <body>
   <h1>John Jannone</h1>
   <p>Hello.</p>
 
-  <!-- ─── Demo: Cloudflare Worker + D1 ───────────────────── -->
-  <h2>Notes (Cloudflare Worker + D1)</h2>
-  <ul class="entries" id="notes-list"><li>Loading…</li></ul>
-  <form id="notes-form">
-    <input id="note-body" placeholder="Write a note…" maxlength="500" required style="flex:1; min-width: 14rem;">
-    <button type="submit">Add</button>
-  </form>
-  <div class="status" id="notes-status"></div>
+  <h2>Projects</h2>
 
-  <!-- ─── Demo: Supabase Postgres ─────────────────────────── -->
-  <h2>Guestbook (Supabase Postgres)</h2>
-  <ul class="entries" id="guestbook-list"><li>Loading…</li></ul>
-  <form id="guestbook-form">
-    <input id="gb-name" placeholder="Name" maxlength="60" required style="width: 10rem;">
-    <input id="gb-message" placeholder="Message" maxlength="280" required style="flex:1; min-width: 14rem;">
-    <button type="submit">Sign</button>
-  </form>
-  <div class="status" id="guestbook-status"></div>
+  <!-- ─────────────────────────────────────────────────────
+       multi-user-template
+       Add new projects by copying this <section> block.
+       Each project header (<h3>) is what distinguishes it
+       from siblings, so always give it a clear name.
+       ───────────────────────────────────────────────────── -->
+  <section class="project">
+    <h3>multi-user-template</h3>
+    <p>
+      Max/MSP framework that turns every phone in the room into a controller —
+      motion, gyro, multitouch, MIDI keyboard, sliders, dials, mic, speech,
+      camera. Pieces can be local (Max-hosted server) or remote via a shared
+      Cloudflare Worker relay with audience and remote-performer modes.
+    </p>
+    <p class="links">
+      <a class="primary"   href="/multi-user-template/">Open</a>
+      <a class="secondary" href="https://github.com/jjannone/multi-user-template">Source</a>
+    </p>
+  </section>
 
-  <script type="module">
-    // ── Config ────────────────────────────────────────────
-    const WORKER_URL = "https://jannone-api.jannone-544.workers.dev";
-    const SUPABASE_URL = "https://ykilpohvxaeeqflaufpy.supabase.co";
-    const SUPABASE_ANON = "sb_publishable_SdYueG4rRTT2Tn76s-4J_A_w6qtq7gG";
-
-    // ── Cloudflare Worker + D1 (notes) ────────────────────
-    const notesList = document.getElementById("notes-list");
-    const notesForm = document.getElementById("notes-form");
-    const noteInput = document.getElementById("note-body");
-    const notesStatus = document.getElementById("notes-status");
-
-    function renderNotes(notes) {
-      if (!notes.length) { notesList.innerHTML = "<li>(none yet)</li>"; return; }
-      notesList.innerHTML = notes.map(n =>
-        `<li>${escape(n.body)} <time>${n.created_at}</time></li>`
-      ).join("");
-    }
-
-    async function loadNotes() {
-      try {
-        const r = await fetch(`${WORKER_URL}/notes`);
-        const { notes } = await r.json();
-        renderNotes(notes);
-      } catch (e) {
-        notesList.innerHTML = `<li style="color:#c00">load failed: ${escape(e.message)}</li>`;
-      }
-    }
-
-    notesForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const body = noteInput.value.trim();
-      if (!body) return;
-      notesForm.querySelector("button").disabled = true;
-      notesStatus.textContent = "saving…";
-      try {
-        const r = await fetch(`${WORKER_URL}/notes`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body }),
-        });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        noteInput.value = "";
-        notesStatus.textContent = "saved.";
-        loadNotes();
-      } catch (err) {
-        notesStatus.textContent = "error: " + err.message;
-      } finally {
-        notesForm.querySelector("button").disabled = false;
-      }
-    });
-
-    // ── Supabase REST (guestbook) ─────────────────────────
-    const gbList = document.getElementById("guestbook-list");
-    const gbForm = document.getElementById("guestbook-form");
-    const gbName = document.getElementById("gb-name");
-    const gbMsg = document.getElementById("gb-message");
-    const gbStatus = document.getElementById("guestbook-status");
-
-    function renderGB(rows) {
-      if (!rows.length) { gbList.innerHTML = "<li>(empty)</li>"; return; }
-      gbList.innerHTML = rows.map(r =>
-        `<li><b>${escape(r.name)}:</b> ${escape(r.message)} <time>${r.created_at}</time></li>`
-      ).join("");
-    }
-
-    async function loadGB() {
-      try {
-        const r = await fetch(`${SUPABASE_URL}/rest/v1/guestbook?select=*&order=id.desc&limit=50`, {
-          headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` },
-        });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        renderGB(await r.json());
-      } catch (e) {
-        gbList.innerHTML = `<li style="color:#c00">load failed: ${escape(e.message)}</li>`;
-      }
-    }
-
-    gbForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = gbName.value.trim();
-      const message = gbMsg.value.trim();
-      if (!name || !message) return;
-      gbForm.querySelector("button").disabled = true;
-      gbStatus.textContent = "signing…";
-      try {
-        const r = await fetch(`${SUPABASE_URL}/rest/v1/guestbook`, {
-          method: "POST",
-          headers: {
-            apikey: SUPABASE_ANON,
-            Authorization: `Bearer ${SUPABASE_ANON}`,
-            "Content-Type": "application/json",
-            Prefer: "return=minimal",
-          },
-          body: JSON.stringify({ name, message }),
-        });
-        if (!r.ok) throw new Error(`HTTP ${r.status} ${await r.text()}`);
-        gbMsg.value = "";
-        gbStatus.textContent = "signed.";
-        loadGB();
-      } catch (err) {
-        gbStatus.textContent = "error: " + err.message;
-      } finally {
-        gbForm.querySelector("button").disabled = false;
-      }
-    });
-
-    // ── utils ─────────────────────────────────────────────
-    function escape(s) {
-      return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    }
-
-    loadNotes();
-    loadGB();
-  </script>
 </body>
 </html>
