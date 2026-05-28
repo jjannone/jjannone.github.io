@@ -425,7 +425,7 @@ let remainingSnapLocal = 0;
 let sinceSnapLocal  = Date.now();
 
 // Two connect modes:
-//   • LAN — the page was served by IMMER v2's Node-for-Max server; the WS
+//   • LAN — the page was served by IMMER v3's Node-for-Max server; the WS
 //           talks to `location.host` directly.
 //   • Cloud — the page was opened with ?cloud=<wss-url>&piece=<slug>&room=<slug>
 //             and connects through the shared mu-relay Cloudflare Worker
@@ -458,11 +458,11 @@ function buildWsUrl() {
 
 function renderStrandedDocs() {
   $("hdr-conn").textContent = "info";
-  $("hdr-name").textContent = "IMMER v2";
+  $("hdr-name").textContent = "IMMER v3";
   const main = document.querySelector("main");
   main.innerHTML = `
     <section class="docs">
-      <h1>IMMER v2</h1>
+      <h1>IMMER v3</h1>
       <p class="muted">
         Web-driven score for an ensemble of dancer-musicians. To play,
         you need a join URL — there are two ways to get one.
@@ -481,7 +481,7 @@ function renderStrandedDocs() {
         If the operator has switched on <strong>Cloud connect</strong> in
         the patch, anyone can join over the internet via a relay URL. The
         operator hands out a link of the form
-        <code>https://john.jann.one/immer_v2/?cloud=…&amp;piece=immer_v2&amp;room=main</code>.
+        <code>https://john.jann.one/immer_v3/?cloud=…&amp;piece=immer_v3&amp;room=main</code>.
         Opening it puts you straight in the lobby.
       </p>
 
